@@ -55,7 +55,6 @@ async def websocket_entry(websocket: WebSocket, chat_id):
     app.sockets[chat_id].append(websocket)
     print(app.sockets)
         
-    await websocket.send_text('waiting')
     await asyncio.gather(
         bridge(websocket, app, chat_id),
         check_socket(websocket, app, chat_id)

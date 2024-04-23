@@ -2,12 +2,13 @@
 const socket = new WebSocket(`ws://localhost:8000/ws/${document.URL.split('/').pop()}`);
 const button = document.querySelector('button')
 const input = document.querySelector('input')
-const h1 = document.querySelector('h1')
+const textarea = document.querySelector('textarea')
 
 
 
 button.addEventListener('click',e =>{
     socket.send(input.value)
+    input.value = ''
 })
 
 
@@ -18,7 +19,7 @@ socket.addEventListener('open', function (event) {
 
 socket.addEventListener('message', function (event) {
     console.log(event.data);
-    console.log(h1)
+    textarea.innerHTML += `${event.data}\n`
     // socket.send('Hello, WebSocket Server!');
 });
 
