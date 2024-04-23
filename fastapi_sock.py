@@ -3,6 +3,7 @@ from fastapi.responses import Response, HTMLResponse, RedirectResponse
 from fastapi.requests import Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
 import asyncio
 import pathlib
 from uuid import uuid4
@@ -18,7 +19,7 @@ app.mount('/static',StaticFiles(directory='static'),name='static')
 
 
 app.sockets = dict()
-
+app.chat_ids = set()
 
 
 
@@ -48,6 +49,7 @@ async def bridge(websocket: WebSocket, app, chat_id):
 async def websocket_entry(websocket: WebSocket, chat_id):
     await websocket.accept()  
     
+    
     print(app.sockets)
     
     app.sockets[chat_id].append(websocket)
@@ -62,7 +64,15 @@ async def websocket_entry(websocket: WebSocket, chat_id):
 
 @app.route('/')
 async def open_websocket(request:Request):
-    chat_id = uuid4()
+    async def generate_chat_id():
+        chat_id = uuid4()
+        if chat_id not in app.chat_ids:
+            app.chat_ids.add(str(chat_id))
+            return chat_id
+        await generate_chat_id()
+
+    chat_id = await generate_chat_id()
+    
     chat_url = f'{request.base_url}' + f'connect/{chat_id}'
     return HTMLResponse(f"""
                         <a href="{chat_url}">{chat_url}</a>
@@ -71,7 +81,9 @@ async def open_websocket(request:Request):
 
 @app.get('/connect/{chat_id}')
 async def connect_websocket(request: Request, chat_id):
-    
+    if chat_id not in app.chat_ids:
+        raise RequestValidationError('Invalid chat')
+
     if not app.sockets.get(chat_id, None):
         app.sockets[chat_id] = []
     

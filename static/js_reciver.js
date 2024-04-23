@@ -18,7 +18,7 @@ socket.addEventListener('open', function (event) {
 
 socket.addEventListener('message', function (event) {
     console.log(event.data);
-    h1.innerHTML = event.data
+    console.log(h1)
     // socket.send('Hello, WebSocket Server!');
 });
 
